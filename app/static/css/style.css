@@ -1,0 +1,518 @@
+
+/* =========================================================
+   AI SKILL VERIFICATION PLATFORM
+   Professional Recruitment Technology Design System
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* -------------------- Design Tokens -------------------- */
+
+:root {
+  --navy-950: #090d16;
+  --navy-900: #0f172a;
+  --navy-800: #1e293b;
+  --navy-700: #334155;
+
+  --slate-600: #475569;
+  --slate-500: #64748b;
+  --slate-400: #94a3b8;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --slate-50: #f8fafc;
+
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+
+  --emerald-600: #059669;
+  --emerald-500: #10b981;
+  --emerald-50: #ecfdf5;
+
+  --amber-600: #d97706;
+  --amber-50: #fffbeb;
+
+  --rose-600: #e11d48;
+  --rose-50: #fff1f2;
+
+  --card-shadow:
+    0 4px 6px -1px rgba(15, 23, 42, 0.05),
+    0 2px 4px -2px rgba(15, 23, 42, 0.05);
+
+  --card-shadow-hover:
+    0 10px 15px -3px rgba(15, 23, 42, 0.08),
+    0 4px 6px -4px rgba(15, 23, 42, 0.03);
+
+  --transition-fast: 0.18s ease;
+}
+
+/* -------------------- Global Layout -------------------- */
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+
+  background-color: var(--slate-50);
+  color: var(--navy-900);
+
+  font-family:
+    'Plus Jakarta Sans',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  transition: color var(--transition-fast);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* -------------------- Navigation -------------------- */
+
+.app-navbar {
+  background-color: var(--navy-900) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand-link {
+  color: #ffffff !important;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.brand-link .brand-icon {
+  color: #38bdf8;
+}
+
+/* -------------------- Cards & Surfaces -------------------- */
+
+.card {
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: 0.85rem;
+  box-shadow: var(--card-shadow);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.card-header {
+  padding: 1rem 1.25rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--slate-200);
+  color: var(--navy-900);
+  font-weight: 600;
+}
+
+/* -------------------- Metric Statistics -------------------- */
+
+.stat-card {
+  padding: 1.25rem;
+  border-left: 4px solid var(--blue-600);
+}
+
+.stat-card-emerald {
+  border-left-color: var(--emerald-500);
+}
+
+.stat-card-amber {
+  border-left-color: var(--amber-600);
+}
+
+.stat-card-rose {
+  border-left-color: var(--rose-600);
+}
+
+.stat-label {
+  color: var(--slate-500);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  color: var(--navy-900);
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* -------------------- Skill Pills & Chips -------------------- */
+
+.skill-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  margin: 0.2rem;
+  padding: 0.28rem 0.65rem;
+
+  border: 1px solid var(--slate-200);
+  border-radius: 50rem;
+
+  background-color: var(--slate-100);
+  color: var(--navy-800);
+
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.skill-pill-claimed {
+  background-color: var(--blue-50);
+  color: var(--blue-700);
+  border-color: var(--blue-100);
+}
+
+.skill-pill-verified {
+  background-color: var(--emerald-50);
+  color: var(--emerald-600);
+  border-color: #a7f3d0;
+  font-weight: 600;
+}
+
+/* -------------------- Assessment Question Palette -------------------- */
+
+.q-palette-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  background-color: #f8fafc;
+  color: #334155;
+
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.q-palette-btn.active-q {
+  border-color: var(--blue-600) !important;
+  background-color: var(--blue-600) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.q-palette-btn.answered-q {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.q-palette-btn.answered-q.active-q {
+  background-color: var(--blue-600) !important;
+  border-color: var(--blue-600) !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.35);
+}
+
+/* -------------------- Assessment Option Cards -------------------- */
+
+.option-card {
+  transition: all 0.15s ease;
+}
+
+.option-card:hover {
+  background-color: var(--slate-100) !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* -------------------- Skill Level Badges -------------------- */
+
+.badge-tier-advanced {
+  background-color: var(--emerald-50);
+  color: var(--emerald-600);
+  border: 1px solid #a7f3d0;
+}
+
+.badge-tier-intermediate {
+  background-color: var(--blue-50);
+  color: var(--blue-700);
+  border: 1px solid var(--blue-100);
+}
+
+.badge-tier-beginner {
+  background-color: var(--amber-50);
+  color: var(--amber-600);
+  border: 1px solid #fde68a;
+}
+
+/* -------------------- Buttons -------------------- */
+
+.btn-primary {
+  background-color: var(--blue-600);
+  border-color: var(--blue-600);
+  font-weight: 600;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background-color: var(--blue-700);
+  border-color: var(--blue-700);
+}
+
+.btn-primary:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+
+.btn-dark {
+  background-color: var(--navy-900);
+  border-color: var(--navy-900);
+}
+
+/* =========================================================
+   PROFESSIONAL SKILLVERIFY FOOTER
+   ========================================================= */
+
+.site-footer {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 100%;
+  margin-top: auto;
+
+  background-color: #ffffff;
+  color: var(--navy-900);
+
+  border-top: 1px solid var(--slate-200);
+
+  font-family:
+    'Plus Jakarta Sans',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+
+  font-size: 14px;
+}
+
+/* Multicolour accent inspired by creative software footers */
+
+.footer-gradient {
+  width: 100%;
+  height: 5px;
+
+  background: linear-gradient(
+    90deg,
+    #ef4444 0%,
+    #f59e0b 20%,
+    #c4d82e 40%,
+    #72d84b 55%,
+    #3694f5 75%,
+    #8065e8 100%
+  );
+}
+
+.footer-content {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 42px 24px 0;
+}
+
+/* Footer column headings */
+
+.site-footer h6 {
+  margin: 0 0 21px;
+
+  color: var(--navy-800);
+
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* Footer navigation links */
+
+.site-footer a {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+
+  margin: 0 0 13px;
+
+  color: var(--slate-600);
+  font-size: 13px;
+  line-height: 1.6;
+
+  text-decoration: none;
+  overflow-wrap: anywhere;
+
+  transition:
+    color var(--transition-fast),
+    text-decoration-color var(--transition-fast);
+}
+
+.site-footer a:hover {
+  color: var(--blue-600);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer a:focus-visible {
+  outline: 2px solid var(--blue-600);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Copyright and legal navigation */
+
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+
+  margin-top: 25px;
+  padding: 20px 0;
+
+  border-top: 1px solid var(--slate-200);
+
+  color: var(--slate-500);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.footer-bottom > span {
+  max-width: 100%;
+}
+
+.footer-bottom nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-bottom nav a {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+
+  color: var(--slate-600);
+  font-size: 12px;
+}
+
+.footer-bottom nav a:hover {
+  color: var(--blue-600);
+}
+
+.footer-separator {
+  color: var(--slate-400);
+}
+
+/* -------------------- Responsive Layout -------------------- */
+
+@media (max-width: 767.98px) {
+  .stat-value {
+    font-size: 1.55rem;
+  }
+
+  .footer-content {
+    padding: 32px 20px 0;
+  }
+
+  .footer-bottom {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .brand-link {
+    font-size: 1rem;
+  }
+
+  .footer-content {
+    padding: 28px 16px 0;
+  }
+
+  .site-footer h6 {
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+
+  .site-footer a {
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 17px 0;
+  }
+
+  .footer-bottom nav {
+    gap: 8px;
+  }
+}
+
+/* -------------------- Print Optimization -------------------- */
+
+@media print {
+  body {
+    min-height: auto;
+    display: block;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .no-print,
+  nav,
+  footer,
+  .btn {
+    display: none !important;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #94a3b8 !important;
+  }
+}

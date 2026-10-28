@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Review Extracted Skills — AI Skill Verification Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-2">
+  <div class="col-lg-9">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <div>
+          <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-file-earmark-check text-success me-2"></i>AI Resume Analysis Review</h4>
+          <small class="text-muted">Review, verify, or modify the extracted technical skills detected in your resume.</small>
+        </div>
+        <span class="badge bg-primary px-3 py-2">Extracted via NLP Engine</span>
+      </div>
+
+      <div class="card-body p-4">
+        <!-- Contact & Profile Metadata Detected -->
+        <div class="row g-3 p-3 bg-light rounded-3 mb-4 border">
+          <div class="col-md-4">
+            <span class="text-muted small d-block">Candidate Name</span>
+            <strong class="text-dark">{{ parsed_data.contact.name if parsed_data.contact else current_user.name }}</strong>
+          </div>
+          <div class="col-md-4">
+            <span class="text-muted small d-block">Extracted Email</span>
+            <strong class="text-dark">{{ parsed_data.contact.email if parsed_data.contact and parsed_data.contact.email else current_user.email }}</strong>
+          </div>
+          <div class="col-md-4">
+            <span class="text-muted small d-block">Python Proficiency Claim</span>
+            {% set py_claim = parsed_data.python_proficiency if parsed_data else None %}
+            {% if py_claim and py_claim.claimed %}
+              <span class="badge bg-info text-dark">{{ py_claim.claimed_level }}</span>
+            {% else %}
+              <span class="badge bg-secondary">Not Detected</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Academic & Project Details Detected (if any) -->
+        {% if parsed_data.education or parsed_data.projects %}
+          <div class="row g-3 mb-4">
+            {% if parsed_data.education %}
+              <div class="col-md-6">
+                <div class="card h-100 p-3 bg-white border">
+                  <h6 class="fw-bold text-secondary mb-2"><i class="bi bi-mortarboard me-1"></i> Education Detected</h6>
+                  <ul class="small text-muted mb-0 ps-3">
+                    {% for edu in parsed_data.education %}
+                      <li>{{ edu }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            {% endif %}
+            {% if parsed_data.projects %}
+              <div class="col-md-6">
+                <div class="card h-100 p-3 bg-white border">
+                  <h6 class="fw-bold text-secondary mb-2"><i class="bi bi-kanban me-1"></i> Projects Detected</h6>
+                  <ul class="small text-muted mb-0 ps-3">
+                    {% for proj in parsed_data.projects %}
+                      <li>{{ proj }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <!-- Categorized Skills with Evidence -->
+        <h5 class="fw-bold mb-3"><i class="bi bi-tags text-primary me-2"></i>Extracted Skills by Category</h5>
+        <div class="p-3 bg-white border rounded-3 mb-4">
+          {% if parsed_data.categorized_skills %}
+            {% for cat, skills in parsed_data.categorized_skills.items() %}
+              <div class="mb-3">
+                <div class="fw-semibold text-primary small text-uppercase mb-1">{{ cat }}</div>
+                <div>
+                  {% for s in skills %}
+                    {% set evidence_map = parsed_data.get('skill_evidence', {}) if parsed_data is mapping else {} %}
+                    <span class="skill-pill skill-pill-claimed" title="Evidence: {{ evidence_map.get(s, 'Detected in document') }}">
+                      {{ s }}
+                    </span>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted mb-0">No technical skills detected automatically.</p>
+          {% endif %}
+        </div>
+
+        <!-- Candidate Modification / Confirmation Form -->
+        <form method="post" action="{{ url_for('main.review_resume') }}">
+          <div class="mb-4">
+            <label class="form-label fw-bold">Confirmed Claimed Skills (Comma-Separated)</label>
+            <textarea class="form-control" name="skills_list" rows="3" required>{{ claimed_skills|join(', ') }}</textarea>
+            <div class="form-text">You may add missing skills or remove false positives. Each skill listed here represents a <em>claimed skill</em> that recruiters can see and request assessment on.</div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('main.upload_resume') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1"></i> Re-upload Document
+            </a>
+            <button class="btn btn-success px-4 py-2 fw-semibold shadow-sm" type="submit">
+              <i class="bi bi-check2-circle me-1"></i> Confirm Skills & Proceed to Assessment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

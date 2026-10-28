@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Job Roles & Skill Requirements — Recruiter Portal{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+  <div class="col-md-8">
+    <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 mb-2 rounded-pill fw-semibold">
+      <i class="bi bi-briefcase-fill me-1"></i> Job Role Configuration (Module 3)
+    </div>
+    <h2 class="fw-bold mb-1 text-navy-900">Job Roles & Required Technical Skills</h2>
+    <p class="text-muted mb-0">Define organizational job roles and specify target technical skills to verify against candidates.</p>
+  </div>
+  <div class="col-md-4 text-md-end mt-3 mt-md-0">
+    <a href="{{ url_for('main.hr_dashboard') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Back to Candidates
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Create Job Role Form -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0 bg-white">
+      <div class="card-header bg-white py-3">
+        <h5 class="fw-bold mb-0 text-navy-900"><i class="bi bi-plus-circle text-primary me-2"></i>Create New Job Role</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" action="{{ url_for('main.hr_roles') }}">
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-navy-900">Role Title:</label>
+            <input type="text" class="form-control" name="title" placeholder="e.g. Junior Python Developer" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-navy-900">Role Description:</label>
+            <textarea class="form-control" name="description" rows="3" placeholder="Brief outline of responsibilities..."></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-navy-900">Required Skills (Comma-separated):</label>
+            <textarea class="form-control" name="required_skills" rows="3" placeholder="Python, Flask, MySQL, REST API, Git" required>Python, Flask, MySQL, REST API</textarea>
+            <div class="form-text small">Enter skills separated by commas or newlines.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 fw-bold">
+            <i class="bi bi-check2-circle me-1"></i> Save Job Role
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configured Job Roles List -->
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 bg-white">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-navy-900"><i class="bi bi-list-check text-primary me-2"></i>Active Configured Roles</h5>
+        <span class="badge bg-light text-dark border">{{ roles|length }} Roles</span>
+      </div>
+      <div class="card-body p-0">
+        {% if roles %}
+          <div class="list-group list-group-flush">
+            {% for r in roles %}
+              <div class="list-group-item p-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <h5 class="fw-bold mb-1 text-navy-900">{{ r.title }}</h5>
+                    <p class="text-slate-600 small mb-2">{{ r.description or 'No description provided.' }}</p>
+                  </div>
+                  <span class="badge bg-light text-muted border small">{{ r.created_at.strftime('%d %b %Y') if r.created_at else '' }}</span>
+                </div>
+                <div>
+                  <span class="fw-bold small text-muted d-block mb-1">Required Competencies:</span>
+                  {% for s in r.get_required_skills() %}
+                    <span class="skill-pill skill-pill-claimed"><i class="bi bi-check2"></i> {{ s }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <!-- Default Seeded Display -->
+          <div class="p-4 text-center text-muted">
+            <div class="bg-light p-4 rounded-3 border d-inline-block text-start mb-3" style="max-width: 500px;">
+              <h6 class="fw-bold text-navy-900 mb-1"><i class="bi bi-stars text-primary me-1"></i> Sample Role: Python Backend Engineer</h6>
+              <p class="small text-muted mb-2">Core diploma engineering recruitment benchmark profile.</p>
+              <div>
+                <span class="skill-pill skill-pill-claimed">Python</span>
+                <span class="skill-pill skill-pill-claimed">Flask</span>
+                <span class="skill-pill skill-pill-claimed">MySQL</span>
+                <span class="skill-pill skill-pill-claimed">REST APIs</span>
+                <span class="skill-pill skill-pill-claimed">Git</span>
+              </div>
+            </div>
+            <p class="small mb-0">No custom roles created yet. Use the form on the left to add specific vacancies.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

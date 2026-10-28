@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% block title %}HR Recruiter Portal — Candidate Skill Directory{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+  <div class="col-md-8">
+    <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 mb-2 rounded-pill fw-semibold">
+      <i class="bi bi-shield-lock me-1"></i> HR Recruitment Management
+    </div>
+    <h2 class="fw-bold mb-1 text-navy-900">Candidate Skill Verification Directory</h2>
+    <p class="text-muted mb-0">Evaluate candidates' claimed resume technical skills against empirical 7-question MCQ assessment results.</p>
+  </div>
+  <div class="col-md-4 text-md-end mt-3 mt-md-0">
+    <span class="badge bg-light text-dark border p-2">
+      <i class="bi bi-person-check text-success me-1"></i> Authorized HR: <strong>{{ current_user.name }}</strong>
+    </span>
+  </div>
+</div>
+
+<!-- 4 Key HR Metrics -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="card h-100 p-3 bg-white stat-card">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="stat-label">Total Candidates</span>
+        <i class="bi bi-people text-primary fs-4"></i>
+      </div>
+      <div class="stat-value text-navy-900">{{ total_candidates }}</div>
+      <small class="text-muted">Registered in database</small>
+    </div>
+  </div>
+
+  <div class="col-md-3 col-6">
+    <div class="card h-100 p-3 bg-white stat-card stat-card-emerald">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="stat-label">Assessments Done</span>
+        <i class="bi bi-patch-check text-success fs-4"></i>
+      </div>
+      <div class="stat-value text-success">{{ completed_count }}</div>
+      <small class="text-muted">Completed MCQs</small>
+    </div>
+  </div>
+
+  <div class="col-md-3 col-6">
+    <div class="card h-100 p-3 bg-white stat-card stat-card-amber">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="stat-label">Pending Tests</span>
+        <i class="bi bi-clock-history text-warning fs-4"></i>
+      </div>
+      <div class="stat-value text-warning">{{ pending_count }}</div>
+      <small class="text-muted">Resume only / in progress</small>
+    </div>
+  </div>
+
+  <div class="col-md-3 col-6">
+    <div class="card h-100 p-3 bg-white stat-card stat-card-emerald">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="stat-label">Average Score</span>
+        <i class="bi bi-graph-up-arrow text-info fs-4"></i>
+      </div>
+      <div class="stat-value text-primary">{{ avg_score|round(2) }} <small class="fs-6 text-muted">/ 100</small></div>
+      <small class="text-muted">Empirical verified mean</small>
+    </div>
+  </div>
+</div>
+
+<!-- Multi-Parameter Search & Filter Card -->
+<div class="card shadow-sm border-0 mb-4 bg-white p-3">
+  <form method="get" action="{{ url_for('main.hr_dashboard') }}" class="row g-2 align-items-center">
+    <!-- Search Query -->
+    <div class="col-lg-3 col-md-6">
+      <label class="form-label small text-muted mb-1">Search Candidate</label>
+      <div class="input-group">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control border-start-0" name="q" value="{{ search_query }}" placeholder="Search by name or email...">
+      </div>
+    </div>
+
+    <!-- Filter: Programming Language -->
+    <div class="col-lg-2 col-md-3 col-6">
+      <label class="form-label small text-muted mb-1">Language</label>
+      <select class="form-select" name="lang">
+        <option value="all" {% if lang_filter == 'all' %}selected{% endif %}>All Languages</option>
+        <option value="python" {% if lang_filter == 'python' %}selected{% endif %}>Python</option>
+        <option value="java" {% if lang_filter == 'java' %}selected{% endif %}>Java</option>
+        <option value="c" {% if lang_filter == 'c' %}selected{% endif %}>C</option>
+        <option value="cpp" {% if lang_filter == 'cpp' %}selected{% endif %}>C++</option>
+      </select>
+    </div>
+
+    <!-- Filter: Score Range -->
+    <div class="col-lg-2 col-md-3 col-6">
+      <label class="form-label small text-muted mb-1">Score Range</label>
+      <select class="form-select" name="score_range">
+        <option value="all" {% if score_filter == 'all' %}selected{% endif %}>All Scores</option>
+        <option value="80_100" {% if score_filter == '80_100' %}selected{% endif %}>80% – 100% (Advanced)</option>
+        <option value="60_79" {% if score_filter == '60_79' %}selected{% endif %}>60% – 79% (Competent)</option>
+        <option value="40_59" {% if score_filter == '40_59' %}selected{% endif %}>40% – 59% (Developing)</option>
+        <option value="below_40" {% if score_filter == 'below_40' %}selected{% endif %}>Below 40%</option>
+      </select>
+    </div>
+
+    <!-- Filter: Assessment Status -->
+    <div class="col-lg-2 col-md-4 col-6">
+      <label class="form-label small text-muted mb-1">Status</label>
+      <select class="form-select" name="status">
+        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed Only</option>
+        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Only</option>
+      </select>
+    </div>
+
+    <!-- Sort By -->
+    <div class="col-lg-2 col-md-4 col-6">
+      <label class="form-label small text-muted mb-1">Sort By</label>
+      <select class="form-select" name="sort">
+        <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>Most Recent</option>
+        <option value="highest" {% if sort_by == 'highest' %}selected{% endif %}>Highest Score</option>
+        <option value="lowest" {% if sort_by == 'lowest' %}selected{% endif %}>Lowest Score</option>
+        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Candidate Name</option>
+      </select>
+    </div>
+
+    <!-- Submit & Reset Buttons -->
+    <div class="col-lg-1 col-md-4 col-12 d-flex gap-1 align-self-end">
+      <button class="btn btn-primary w-100" type="submit" title="Apply Filters">
+        <i class="bi bi-funnel"></i>
+      </button>
+      <a href="{{ url_for('main.hr_dashboard') }}" class="btn btn-outline-secondary" title="Reset Filters">
+        <i class="bi bi-x-lg"></i>
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Candidate Records Table -->
+<div class="card shadow-sm border-0 mb-4 bg-white">
+  <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+    <h5 class="fw-bold mb-0 text-navy-900"><i class="bi bi-people text-primary me-2"></i>Candidate Directory Records</h5>
+    <span class="badge bg-light text-dark border">{{ candidates|length }} Candidates Listed</span>
+  </div>
+
+  <div class="card-body p-0">
+    {% if candidates %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-muted text-uppercase">
+            <tr>
+              <th class="ps-4">Candidate</th>
+              <th>Resume</th>
+              <th>Extracted Skills</th>
+              <th>Language</th>
+              <th>Assessment Score</th>
+              <th>Status</th>
+              <th>Certificate</th>
+              <th class="text-end pe-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in candidates %}
+              <tr>
+                <td class="ps-4">
+                  <div class="fw-bold text-navy-900">{{ c.user.name }}</div>
+                  <small class="text-muted">{{ c.user.email }}</small>
+                </td>
+                <td>
+                  {% if c.resume %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                      <i class="bi bi-file-earmark-check me-1"></i> Uploaded
+                    </span>
+                    <small class="d-block text-muted text-truncate" style="max-width: 120px;">{{ c.resume.filename }}</small>
+                  {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary border">None</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if c.skills %}
+                    <div style="max-width: 200px;">
+                      {% for s in c.skills[:3] %}
+                        <span class="skill-pill skill-pill-claimed" style="font-size: 0.75rem;">{{ s }}</span>
+                      {% endfor %}
+                      {% if c.skills|length > 3 %}
+                        <span class="badge bg-light text-muted border">+{{ c.skills|length - 3 }}</span>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <small class="text-muted">No skills parsed</small>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if c.latest_attempt %}
+                    <span class="badge bg-light text-dark border fw-semibold">{{ c.language }}</span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if c.latest_attempt and c.latest_attempt.status == 'completed' %}
+                    <strong class="text-primary fs-6">{{ c.latest_attempt.final_score|round(2) }}</strong> <small class="text-muted">/ 100</small>
+                    <div class="small text-muted">{{ c.latest_attempt.percentage|round(2) }}%</div>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if c.status == 'Assessment Completed' %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Completed</span>
+                    <div class="small text-muted">{{ c.latest_attempt.completed_at.strftime('%Y-%m-%d') if c.latest_attempt.completed_at else '' }}</div>
+                  {% elif c.status == 'Resume Uploaded' %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i> Pending Test</span>
+                  {% else %}
+                    <span class="badge bg-secondary text-white">No Resume</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if c.certificate %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                      <i class="bi bi-award-fill me-1"></i> Eligible (Issued)
+                    </span>
+                    <small class="d-block text-muted">{{ c.certificate.certificate_id }}</small>
+                  {% elif c.latest_attempt and c.latest_attempt.status == 'completed' %}
+                    <span class="badge bg-light text-muted border">Not Eligible (&lt;60%)</span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td class="text-end pe-4">
+                  <div class="d-inline-flex gap-1">
+                    <a href="{{ url_for('main.hr_candidate_detail', user_id=c.user.id) }}" class="btn btn-outline-primary btn-sm" title="Examine Candidate Details">
+                      <i class="bi bi-eye me-1"></i> Details
+                    </a>
+                    {% if c.report %}
+                      <a href="{{ url_for('main.download_report_pdf', report_id=c.report.id) }}" class="btn btn-outline-secondary btn-sm" title="Download Report PDF">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                      </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-search fs-2 d-block mb-2 text-secondary"></i>
+        <h6 class="fw-bold text-navy-900">No Candidates Match Filters</h6>
+        <p class="mb-3 small">Try adjusting your search criteria, language selection, or score range.</p>
+        <a href="{{ url_for('main.hr_dashboard') }}" class="btn btn-outline-primary btn-sm">Clear Filters</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

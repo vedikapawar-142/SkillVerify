@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Official Skill Verification Report — #REP-{{ attempt.id }}-{{ report.generated_at.year }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-2">
+  <div class="col-lg-10">
+
+    <!-- Top Action Bar (hidden on print) -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+      <a href="{{ url_for('main.dashboard') if current_user.is_candidate else url_for('main.hr_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
+      </a>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('main.download_report_pdf', report_id=report.id) }}" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Report
+        </a>
+        {% if certificate %}
+          <a href="{{ url_for('main.download_certificate', certificate_id=certificate.certificate_id) }}" class="btn btn-success btn-sm">
+            <i class="bi bi-award me-1"></i> Download Certificate (PDF)
+          </a>
+        {% endif %}
+        <button class="btn btn-primary btn-sm shadow-sm" onclick="window.print();">
+          <i class="bi bi-printer me-1"></i> Print
+        </button>
+      </div>
+    </div>
+
+    <!-- Official Report Document Sheet -->
+    <div class="card shadow border-0 p-4 p-md-5 bg-white mb-5">
+      <!-- Report Header -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 border-bottom mb-4">
+        <div>
+          <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 mb-2 rounded-pill fw-semibold">
+            <i class="bi bi-shield-check me-1"></i> AI Skill Verification Platform &bull; Phase 1
+          </div>
+          <h2 class="fw-bold mb-1 text-navy-900">Technical Skill Verification Report</h2>
+          <div class="text-muted small">Standardized Empirical Assessment & Resume Claim Verification</div>
+        </div>
+        <div class="text-md-end">
+          <div class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold mb-1">
+            <i class="bi bi-patch-check-fill me-1"></i> VERIFIED REPORT
+          </div>
+          <div class="text-muted small">Ref: <strong>REP-ATT-{{ attempt.id }}-{{ report.generated_at.year }}</strong></div>
+          <div class="text-muted small">Date: {{ report.generated_at.strftime('%B %d, %Y at %H:%M UTC') }}</div>
+        </div>
+      </div>
+
+      <!-- Candidate & Assessment Overview Table -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="p-3 bg-light rounded-3 border h-100">
+            <h6 class="fw-bold text-navy-900 mb-3"><i class="bi bi-person text-primary me-2"></i>Candidate Profile</h6>
+            <table class="table table-sm table-borderless small mb-0">
+              <tr>
+                <td class="text-muted" style="width: 140px;">Candidate Name:</td>
+                <td class="fw-bold text-navy-900">{{ candidate.name }}</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Email Address:</td>
+                <td>{{ candidate.email }}</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Resume Document:</td>
+                <td>{{ resume.filename if resume else 'None' }}</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Assessment Ref:</td>
+                <td>#ATT-{{ attempt.id }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="p-3 bg-light rounded-3 border h-100">
+            <h6 class="fw-bold text-navy-900 mb-3"><i class="bi bi-award text-primary me-2"></i>Score Summary</h6>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted small">Assessed Language:</span>
+              <strong class="text-navy-900">{{ attempt.language_display }}</strong>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted small">Final Score:</span>
+              <strong class="text-primary fs-5">{{ attempt.final_score|round(2) }} / 100</strong>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted small">Percentage:</span>
+              <strong class="text-success">{{ attempt.percentage|round(2) }}%</strong>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted small">Answers Breakdown:</span>
+              <span class="text-muted">{{ attempt.correct_count }} Correct, {{ attempt.incorrect_count }} Incorrect (of 7)</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted small">Performance Level:</span>
+              <span class="badge bg-primary">{{ attempt.performance_category }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 1: Resume vs Assessment Comparison -->
+      <h5 class="fw-bold text-navy-900 mb-3 border-bottom pb-2">
+        1. Resume Claims vs. Practical Assessment Comparison
+      </h5>
+      {% if comparison %}
+        <div class="alert alert-light border mb-3">
+          <span class="badge bg-primary mb-1">{{ comparison.status_label }}</span>
+          <p class="mb-0 text-dark small">{{ comparison.analysis }}</p>
+        </div>
+      {% endif %}
+
+      <!-- Section 2: Actionable Improvement Suggestions -->
+      <h5 class="fw-bold text-navy-900 mt-4 mb-3 border-bottom pb-2">
+        2. Evidence-Based Improvement Suggestions
+      </h5>
+      {% if suggestions %}
+        <div class="d-flex flex-column gap-2 mb-4">
+          {% for s in suggestions %}
+            <div class="p-2 px-3 bg-light rounded border small">
+              <strong class="text-navy-900">{{ s.topic }}:</strong> {{ s.recommendation }}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted small mb-4">Consistent foundational knowledge demonstrated across all evaluated topics.</p>
+      {% endif %}
+
+      <!-- Section 3: Complete Question-by-Question Review -->
+      <h5 class="fw-bold text-navy-900 mt-4 mb-3 border-bottom pb-2">
+        3. Complete Question-by-Question Assessment Review (7 MCQs)
+      </h5>
+      <div class="table-responsive mb-4">
+        <table class="table table-bordered table-sm align-middle small mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th style="width: 35px;">#</th>
+              <th>Topic & Question Statement</th>
+              <th style="width: 25%;">Candidate Selected Answer</th>
+              <th style="width: 25%;">Correct Answer & Explanation</th>
+              <th style="width: 80px;" class="text-center">Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in questions %}
+              {% set ans = answers_map.get(q.id) %}
+              {% set submitted = ans.submitted_answer if ans and ans.submitted_answer else "(No answer)" %}
+              {% set is_correct = ans.is_correct if ans else false %}
+              <tr class="{% if is_correct %}table-success-subtle{% else %}table-danger-subtle{% endif %}">
+                <td class="fw-bold text-center">{{ loop.index }}</td>
+                <td>
+                  <span class="badge bg-light text-dark border mb-1">{{ q.topic }}</span>
+                  <div class="fw-semibold text-navy-900">{{ q.statement }}</div>
+                </td>
+                <td>{{ submitted }}</td>
+                <td>
+                  <div class="fw-bold text-dark">{{ q.correct_answer }}</div>
+                  <div class="text-muted mt-1" style="font-size: 0.8rem;"><em>{{ q.explanation }}</em></div>
+                </td>
+                <td class="text-center">
+                  {% if is_correct %}
+                    <span class="badge bg-success">Correct</span>
+                  {% else %}
+                    <span class="badge bg-danger">Incorrect</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Legal & Assessment Disclaimer -->
+      <div class="p-3 bg-light rounded-3 border text-muted small mt-4">
+        <strong>Important Notice:</strong> This assessment report is generated objectively from candidate-submitted responses to a randomized 7-question multiple-choice technical evaluation. It serves as an evidence-based skill indicator for recruitment and developmental feedback, not an accredited professional degree or commercial guarantee.
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

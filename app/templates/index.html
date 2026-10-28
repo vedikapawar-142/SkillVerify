@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}AI Skill Verification Platform — Home{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row align-items-center justify-content-center min-vh-50">
+    <div class="col-lg-10 col-xl-9 text-center">
+
+      <h1 class="display-4 fw-bold text-navy-900 lh-tight mb-4">
+        Verify Technical Skills
+        <br>
+        <span class="text-primary">Beyond Resume Claims</span>
+      </h1>
+
+      <p class="lead text-secondary mb-4 mx-auto" style="font-size: 1.15rem; max-width: 780px;">
+        A web-based recruitment technology platform that objectively verifies candidate technical skills by contrasting claimed resume proficiency with empirical programming assessment performance.
+      </p>
+
+      <div class="d-flex flex-wrap gap-3 justify-content-center">
+        <a class="btn btn-primary btn-lg px-4 shadow-sm fw-semibold"
+           href="{{ url_for('auth.register') }}">
+          <i class="bi bi-person-plus me-1"></i>
+          Candidate Registration
+        </a>
+
+        <a class="btn btn-outline-secondary btn-lg px-4"
+           href="{{ url_for('auth.login') }}">
+          <i class="bi bi-box-arrow-in-right me-1"></i>
+          Sign In
+        </a>
+
+        <a class="btn btn-outline-primary btn-lg px-4"
+           href="{{ url_for('auth.hr_login') }}">
+          <i class="bi bi-building me-1"></i>
+          HR Recruiter Portal
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

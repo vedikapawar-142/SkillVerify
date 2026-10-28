@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% block title %}{{ attempt.language_display }} Assessment Result & Answer Review — AI Skill Verification Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-2">
+  <div class="col-lg-10">
+
+    <!-- Top Result Banner -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+      <div class="card-body p-4 text-center">
+        <div class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 mb-2 rounded-pill fw-semibold">
+          <i class="bi bi-patch-check-fill me-1"></i> Assessment Completed & Verified
+        </div>
+        <h2 class="fw-bold mb-1 text-navy-900">{{ attempt.language_display }} Skill Assessment Result</h2>
+        <p class="text-muted small mb-4">
+          Session #ATT-{{ attempt.id }} &bull; Completed on {{ attempt.completed_at.strftime('%B %d, %Y at %H:%M UTC') if attempt.completed_at else 'Recent' }}
+        </p>
+
+        <!-- Main Stats Overview (4 key metrics) -->
+        <div class="row g-3 justify-content-center mb-4 text-start">
+          <!-- Final Score -->
+          <div class="col-md-3 col-6">
+            <div class="p-3 bg-light rounded-3 border stat-card">
+              <span class="text-muted small fw-semibold">Final Score</span>
+              <div class="stat-value text-primary mt-1">
+                {{ attempt.final_score|round(2) }} <small class="fs-6 text-muted">/ 100</small>
+              </div>
+              <small class="text-muted">Proportionally weighted</small>
+            </div>
+          </div>
+
+          <!-- Percentage -->
+          <div class="col-md-3 col-6">
+            <div class="p-3 bg-light rounded-3 border stat-card stat-card-emerald">
+              <span class="text-muted small fw-semibold">Percentage</span>
+              <div class="stat-value text-success mt-1">
+                {{ attempt.percentage|round(2) }}%
+              </div>
+              <small class="text-muted">Exact percentage</small>
+            </div>
+          </div>
+
+          <!-- Correct / Incorrect -->
+          <div class="col-md-3 col-6">
+            <div class="p-3 bg-light rounded-3 border stat-card stat-card-amber">
+              <span class="text-muted small fw-semibold">Answers Breakdown</span>
+              <div class="stat-value text-navy-900 mt-1">
+                <span class="text-success">{{ attempt.correct_count }}</span> / <span class="text-danger">{{ attempt.incorrect_count }}</span>
+              </div>
+              <small class="text-muted">{{ attempt.correct_count }} Correct, {{ attempt.incorrect_count }} Incorrect</small>
+            </div>
+          </div>
+
+          <!-- Performance Tier -->
+          <div class="col-md-3 col-6">
+            <div class="p-3 bg-light rounded-3 border stat-card stat-card-emerald">
+              <span class="text-muted small fw-semibold">Performance Category</span>
+              <div class="mt-2">
+                <span class="badge px-3 py-2 fs-6 
+                  {% if 'Advanced' in attempt.performance_category or 'Strong' in attempt.performance_category %}bg-success
+                  {% elif 'Intermediate' in attempt.performance_category %}bg-primary
+                  {% elif 'Developing' in attempt.performance_category %}bg-warning text-dark
+                  {% else %}bg-danger{% endif %}">
+                  {{ attempt.performance_category }}
+                </span>
+              </div>
+              <small class="text-muted d-block mt-1">Standardized Level</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          {% if report %}
+            <a href="{{ url_for('main.download_report_pdf', report_id=report.id) }}" class="btn btn-outline-primary px-3 shadow-sm fw-semibold">
+              <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Assessment Report
+            </a>
+          {% endif %}
+          {% if certificate %}
+            <a href="{{ url_for('main.download_certificate', certificate_id=certificate.certificate_id) }}" class="btn btn-success px-3 shadow-sm fw-semibold">
+              <i class="bi bi-award me-1"></i> Download Verified Certificate (PDF)
+            </a>
+            <a href="{{ url_for('main.verify_certificate', certificate_id=certificate.certificate_id) }}" target="_blank" class="btn btn-outline-success px-3 shadow-sm fw-semibold">
+              <i class="bi bi-qr-code me-1"></i> Public QR Verification
+            </a>
+          {% endif %}
+          <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-speedometer2 me-1"></i> Candidate Dashboard
+          </a>
+          <a href="{{ url_for('main.select_language') }}" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-repeat me-1"></i> Take Another Assessment
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Certificate Eligibility Status Card -->
+    {% if certificate %}
+      <div class="card mb-4 border-0 shadow-sm bg-white" style="border-left: 6px solid var(--emerald-500) !important;">
+        <div class="card-body p-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="bg-success text-white p-3 rounded-circle fs-3">
+                <i class="bi bi-award-fill"></i>
+              </div>
+              <div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle mb-1">Eligible & Issued</span>
+                <h5 class="fw-bold mb-1 text-navy-900">Certificate Reference: {{ certificate.certificate_id }}</h5>
+                <p class="text-muted small mb-0">
+                  Congratulations! You met the 60.0% verification threshold with a score of <strong>{{ attempt.final_score|round(2) }}%</strong>.
+                </p>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('main.download_certificate', certificate_id=certificate.certificate_id) }}" class="btn btn-success btn-sm">
+                <i class="bi bi-download me-1"></i> Download Certificate
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="card mb-4 border-0 shadow-sm bg-white">
+        <div class="card-body p-3 p-md-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-light text-muted p-3 rounded-circle fs-4 border">
+              <i class="bi bi-award"></i>
+            </div>
+            <div>
+              <h6 class="fw-bold mb-1 text-navy-900">Certificate Eligibility Status: Threshold Not Met</h6>
+              <p class="text-muted small mb-0">
+                A minimum score of <strong>60.0%</strong> is required to generate a verifiable certificate. Your score was <strong>{{ attempt.final_score|round(2) }}%</strong>. You may practice and re-attempt the assessment anytime.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Resume-to-Assessment Skill Comparison (Section 9) -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+      <div class="card-header bg-white py-3 border-bottom">
+        <h5 class="fw-bold mb-0 text-navy-900">
+          <i class="bi bi-bezier2 text-primary me-2"></i>Resume Claims vs. Assessment Performance Comparison
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        {% if comparison %}
+          <div class="alert alert-light border mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-primary px-3 py-1">{{ comparison.status_label }}</span>
+              <small class="text-muted">Assessed Language: <strong>{{ comparison.language }}</strong></small>
+            </div>
+            <p class="mb-0 text-dark fw-medium">{{ comparison.analysis }}</p>
+          </div>
+
+          <div class="row g-4 mb-3">
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 border h-100">
+                <h6 class="fw-bold text-success mb-2"><i class="bi bi-check-circle-fill me-1"></i> Demonstrated Strengths</h6>
+                {% if comparison.strengths %}
+                  <ul class="mb-0 small ps-3 text-secondary">
+                    {% for item in comparison.strengths %}
+                      <li><strong>{{ item }}:</strong> Answered correctly with demonstrated conceptual accuracy.</li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <p class="small text-muted mb-0">No topics fully answered correctly in this attempt.</p>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 border h-100">
+                <h6 class="fw-bold text-danger mb-2"><i class="bi bi-exclamation-circle-fill me-1"></i> Areas Requiring Improvement</h6>
+                {% if comparison.improvement_areas %}
+                  <ul class="mb-0 small ps-3 text-secondary">
+                    {% for item in comparison.improvement_areas %}
+                      <li><strong>{{ item }}:</strong> Core concepts require further practice.</li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <p class="small text-success mb-0">Flawless demonstration! All evaluated topics answered correctly.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            <em>{{ comparison.disclaimer }}</em>
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">No resume comparison data available for this attempt.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Personalized Improvement Suggestions (Section 10) -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+      <div class="card-header bg-white py-3 border-bottom">
+        <h5 class="fw-bold mb-0 text-navy-900">
+          <i class="bi bi-lightbulb-fill text-warning me-2"></i>Personalized Learning & Improvement Recommendations
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        {% if suggestions %}
+          <div class="d-flex flex-column gap-3">
+            {% for s in suggestions %}
+              <div class="p-3 bg-light rounded-3 border d-flex gap-3 align-items-start">
+                <div class="p-2 bg-primary-subtle text-primary rounded-circle flex-shrink-0">
+                  <i class="bi bi-arrow-right-circle-fill fs-5"></i>
+                </div>
+                <div>
+                  <h6 class="fw-bold text-navy-900 mb-1">{{ s.topic }}</h6>
+                  <p class="text-secondary small mb-0">{{ s.recommendation }}</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">No specific improvement suggestions generated for this attempt.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- POST-SUBMISSION DETAILED ANSWER REVIEW (All 7 Questions) -->
+    <div class="card shadow-sm border-0 mb-5 bg-white">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="fw-bold mb-0 text-navy-900">
+            <i class="bi bi-card-checklist text-primary me-2"></i>Complete Question-by-Question Answer Review (7 MCQs)
+          </h5>
+          <small class="text-muted">Saved attempt questions, your selected answers, correct answers, and full technical explanations.</small>
+        </div>
+        <span class="badge bg-light text-dark border">{{ questions|length }} Questions</span>
+      </div>
+
+      <div class="card-body p-4">
+        <div class="d-flex flex-column gap-4">
+          {% for q in questions %}
+            {% set ans = answers_map.get(q.id) %}
+            {% set submitted = ans.submitted_answer if ans and ans.submitted_answer else "(No answer submitted)" %}
+            {% set is_correct = ans.is_correct if ans else false %}
+
+            <div class="card border {% if is_correct %}border-success-subtle bg-white{% else %}border-danger-subtle bg-white{% endif %} shadow-none">
+              <!-- Question Header -->
+              <div class="card-header {% if is_correct %}bg-success-subtle{% else %}bg-danger-subtle{% endif %} py-2 px-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge {% if is_correct %}bg-success{% else %}bg-danger{% endif %} fw-bold">
+                    Question {{ loop.index }}
+                  </span>
+                  <span class="badge bg-light text-dark border">{{ q.topic }}</span>
+                </div>
+                <div>
+                  {% if is_correct %}
+                    <span class="badge bg-success text-white px-2 py-1">
+                      <i class="bi bi-check-circle-fill me-1"></i> Correct (+14.29%)
+                    </span>
+                  {% else %}
+                    <span class="badge bg-danger text-white px-2 py-1">
+                      <i class="bi bi-x-circle-fill me-1"></i> Incorrect (0%)
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Question Body -->
+              <div class="card-body p-3 p-md-4">
+                <h6 class="fw-bold text-navy-900 mb-3" style="line-height: 1.5;">{{ q.statement }}</h6>
+
+                {% if q.code_snippet %}
+                  <div class="p-3 bg-dark text-light rounded-3 font-monospace small mb-3" style="white-space: pre-wrap;">
+{{ q.code_snippet }}
+                  </div>
+                {% endif %}
+
+                <!-- Option Display Grid -->
+                <div class="row g-2 mb-3">
+                  {% for opt in q.get_options() %}
+                    {% set is_selected = (opt == submitted) %}
+                    {% set is_the_correct = (opt == q.correct_answer) %}
+
+                    <div class="col-12">
+                      <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between
+                        {% if is_the_correct %}bg-success-subtle border-success text-success-emphasis
+                        {% elif is_selected and not is_correct %}bg-danger-subtle border-danger text-danger-emphasis
+                        {% else %}bg-light border-light-subtle text-muted{% endif %}">
+                        
+                        <div class="d-flex align-items-center gap-2">
+                          {% if is_the_correct %}
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                          {% elif is_selected and not is_correct %}
+                            <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                          {% else %}
+                            <i class="bi bi-circle text-muted fs-6"></i>
+                          {% endif %}
+                          <span class="fw-medium">{{ opt }}</span>
+                        </div>
+
+                        <div>
+                          {% if is_the_correct %}
+                            <span class="badge bg-success"><i class="bi bi-check2"></i> Correct Answer</span>
+                          {% endif %}
+                          {% if is_selected %}
+                            {% if is_the_correct %}
+                              <span class="badge bg-primary">Your Selection</span>
+                            {% else %}
+                              <span class="badge bg-danger">Your Answer (Incorrect)</span>
+                            {% endif %}
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+
+                <!-- Technical Explanation Box -->
+                <div class="p-3 bg-light rounded-3 border text-secondary small">
+                  <div class="fw-bold text-navy-900 mb-1">
+                    <i class="bi bi-info-circle-fill text-primary me-1"></i> Technical Explanation:
+                  </div>
+                  <div>{{ q.explanation }}</div>
+                </div>
+
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

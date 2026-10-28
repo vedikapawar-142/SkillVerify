@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+{% block title %}{{ attempt.language_display }} Assessment — AI Skill Verification Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-2">
+  <div class="col-lg-10">
+
+    <!-- Top Assessment Session Bar -->
+    <div class="card p-3 mb-4 shadow-sm border-0 bg-white">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="bg-primary text-white p-2 rounded-3 fs-4">
+            <i class="bi bi-code-slash"></i>
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <h4 class="fw-bold mb-0 text-navy-900">{{ attempt.language_display }} Skill Assessment</h4>
+              <span class="badge bg-primary rounded-pill px-2 py-1">Phase 1 Standard</span>
+            </div>
+            <div class="text-muted small">
+              Attempt #ATT-{{ attempt.id }} &bull; 7 MCQs &bull; Equal Weight (100 Marks Total)
+            </div>
+          </div>
+        </div>
+
+        <!-- Answered Counter & Progress -->
+        <div class="text-end">
+          <div class="small text-muted mb-1">
+            Progress: <strong id="progressText" class="text-primary">0 / 7 Answered</strong>
+          </div>
+          <div class="progress" style="width: 180px; height: 8px;">
+            <div id="progressBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question Navigation Palette (1 to 7) -->
+    <div class="card p-3 mb-4 shadow-sm border-0 bg-white">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="small fw-bold text-navy-900 me-2"><i class="bi bi-grid-3x3-gap-fill text-primary me-1"></i> Question Palette:</span>
+          <div class="d-flex gap-2" id="questionPalette">
+            {% for q in questions %}
+              {% set ans_val = existing_answers.get(q.id, '') %}
+              <button type="button" 
+                      class="btn btn-sm q-palette-btn {% if loop.first %}active-q{% endif %} {% if ans_val %}answered-q{% endif %}"
+                      id="palette_btn_{{ loop.index }}"
+                      onclick="showQuestion({{ loop.index }})">
+                {{ loop.index }}
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 small text-muted">
+          <span><span class="badge bg-success p-1 me-1">&nbsp;&nbsp;</span> Answered</span>
+          <span><span class="badge bg-light text-dark border p-1 me-1">&nbsp;&nbsp;</span> Unanswered</span>
+          <span><span class="badge bg-primary p-1 me-1">&nbsp;&nbsp;</span> Current</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assessment Form -->
+    <form method="post" action="{{ url_for('main.take_assessment', attempt_id=attempt.id) }}" id="assessmentForm">
+
+      <!-- 7 Question Panes -->
+      {% for q in questions %}
+        {% set q_idx = loop.index %}
+        {% set existing_val = existing_answers.get(q.id, '') %}
+        
+        <div class="card mb-4 border-0 shadow-sm question-pane {% if not loop.first %}d-none{% endif %}" id="q_pane_{{ q_idx }}">
+          <!-- Question Header -->
+          <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-primary rounded-pill px-3 py-1 fw-bold">Question {{ q_idx }} of {{ loop.length }}</span>
+              <span class="badge bg-light text-dark border">{{ q.topic }}</span>
+              {% if q.difficulty == 1 %}
+                <span class="badge bg-success-subtle text-success border">Easy</span>
+              {% elif q.difficulty == 2 %}
+                <span class="badge bg-info-subtle text-info border">Medium</span>
+              {% else %}
+                <span class="badge bg-danger-subtle text-danger border">Hard</span>
+              {% endif %}
+            </div>
+            <span class="badge bg-secondary-subtle text-dark border px-2 py-1">Weight: 14.29%</span>
+          </div>
+
+          <!-- Question Body -->
+          <div class="card-body p-4">
+            <h5 class="fw-semibold text-navy-900 mb-3" style="line-height: 1.5;">{{ q.statement }}</h5>
+
+            {% if q.code_snippet %}
+              <div class="p-3 bg-light rounded-3 border mb-3 font-monospace small" style="white-space: pre-wrap; background: #0f172a; color: #f8fafc;">
+{{ q.code_snippet }}
+              </div>
+            {% endif %}
+
+            <!-- 4 MCQ Options -->
+            <div class="d-flex flex-column gap-2 mt-3">
+              {% for opt in q.get_options() %}
+                <label class="form-check p-3 rounded-3 border option-card d-flex align-items-center gap-3 mb-0" 
+                       id="opt_label_{{ q.id }}_{{ loop.index }}"
+                       style="cursor: pointer; background: {% if existing_val == opt %}#eff6ff{% else %}#ffffff{% endif %}; border-color: {% if existing_val == opt %}#2563eb{% else %}#e2e8f0{% endif %};">
+                  <input class="form-check-input mt-0 flex-shrink-0" 
+                         type="radio" 
+                         name="q_{{ q.id }}" 
+                         id="opt_{{ q.id }}_{{ loop.index }}" 
+                         value="{{ opt }}"
+                         {% if existing_val == opt %}checked{% endif %}
+                         onchange="handleOptionSelected({{ q_idx }}, {{ q.id }})">
+                  <span class="form-check-label w-100 text-dark fw-medium" style="font-size: 0.95rem;">
+                    {{ opt }}
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Question Navigation Footer -->
+          <div class="card-footer bg-light p-3 d-flex justify-content-between align-items-center">
+            <div>
+              {% if not loop.first %}
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="showQuestion({{ q_idx - 1 }})">
+                  <i class="bi bi-arrow-left me-1"></i> Previous Question
+                </button>
+              {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+              {% if not loop.last %}
+                <button type="button" class="btn btn-primary btn-sm px-3" onclick="showQuestion({{ q_idx + 1 }})">
+                  Next Question <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+              {% else %}
+                <button type="button" class="btn btn-success btn-sm px-4 fw-bold" onclick="openSubmitModal()">
+                  <i class="bi bi-check2-circle me-1"></i> Review & Submit
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+      <!-- Bottom Submission Bar -->
+      <div class="card shadow-sm border-0 mb-5 p-3 bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div>
+            <div class="fw-bold text-navy-900">Ready to complete your assessment?</div>
+            <div class="text-muted small">You can change any answer before final confirmation. Once submitted, answers cannot be modified.</div>
+          </div>
+          <button type="button" class="btn btn-success btn-lg px-4 shadow-sm fw-bold" onclick="openSubmitModal()">
+            <i class="bi bi-send-check me-1"></i> Submit Assessment
+          </button>
+        </div>
+      </div>
+
+      <!-- Confirmation Modal -->
+      <div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-navy-900 text-white">
+              <h5 class="modal-title fw-bold" id="submitModalLabel">
+                <i class="bi bi-question-circle me-2 text-primary"></i>Confirm Final Submission
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+              <div class="display-6 text-primary mb-3">
+                <i class="bi bi-file-earmark-check"></i>
+              </div>
+              <h5 class="fw-bold text-navy-900 mb-2">Submit Your {{ attempt.language_display }} Assessment?</h5>
+              <p class="text-secondary mb-3">
+                You have answered <strong id="modalAnsweredCount" class="text-navy-900">0</strong> out of <strong>7</strong> questions.
+              </p>
+
+              <div id="unansweredWarning" class="alert alert-warning text-start small mb-3 d-none">
+                <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                <strong>Notice:</strong> You have <span id="unansweredCountDisplay">0</span> unanswered questions. Unanswered questions will receive 0 marks.
+              </div>
+
+              <div class="alert alert-info text-start small mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                Upon submission, your final score out of 100 will be calculated immediately and full answer explanations will be displayed.
+              </div>
+            </div>
+            <div class="modal-footer bg-light">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-arrow-left me-1"></i> Keep Reviewing
+              </button>
+              <button type="submit" class="btn btn-success px-4 fw-bold">
+                <i class="bi bi-check-lg me-1"></i> Yes, Submit Assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+.q-palette-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #334155;
+  transition: all 0.15s ease;
+}
+.q-palette-btn.active-q {
+  border-color: #2563eb !important;
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+.q-palette-btn.answered-q {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
+}
+.q-palette-btn.answered-q.active-q {
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.35);
+}
+.option-card:hover {
+  background-color: #f1f5f9 !important;
+}
+</style>
+
+<script>
+let currentQuestion = 1;
+const totalQuestions = {{ questions|length }};
+
+function showQuestion(qIdx) {
+  if (qIdx < 1 || qIdx > totalQuestions) return;
+  
+  // Hide all question panes
+  document.querySelectorAll('.question-pane').forEach(el => el.classList.add('d-none'));
+  
+  // Show target question pane
+  const targetPane = document.getElementById(`q_pane_${qIdx}`);
+  if (targetPane) {
+    targetPane.classList.remove('d-none');
+  }
+
+  // Update palette active status
+  currentQuestion = qIdx;
+  updatePaletteState();
+  window.scrollTo({ top: 120, behavior: 'smooth' });
+}
+
+function handleOptionSelected(qIdx, questionId) {
+  // Update palette button styling
+  const paletteBtn = document.getElementById(`palette_btn_${qIdx}`);
+  if (paletteBtn) {
+    paletteBtn.classList.add('answered-q');
+  }
+
+  // Highlight selected card visually
+  const options = document.querySelectorAll(`input[name="q_${questionId}"]`);
+  options.forEach((opt, idx) => {
+    const label = document.getElementById(`opt_label_${questionId}_${idx + 1}`);
+    if (label) {
+      if (opt.checked) {
+        label.style.backgroundColor = '#eff6ff';
+        label.style.borderColor = '#2563eb';
+      } else {
+        label.style.backgroundColor = '#ffffff';
+        label.style.borderColor = '#e2e8f0';
+      }
+    }
+  });
+
+  updateProgress();
+}
+
+function updatePaletteState() {
+  for (let i = 1; i <= totalQuestions; i++) {
+    const btn = document.getElementById(`palette_btn_${i}`);
+    if (btn) {
+      if (i === currentQuestion) {
+        btn.classList.add('active-q');
+      } else {
+        btn.classList.remove('active-q');
+      }
+    }
+  }
+}
+
+function getAnsweredCount() {
+  const answeredNames = new Set();
+  const checked = document.querySelectorAll('#assessmentForm input[type="radio"]:checked');
+  checked.forEach(radio => answeredNames.add(radio.name));
+  return answeredNames.size;
+}
+
+function updateProgress() {
+  const count = getAnsweredCount();
+  const pct = Math.round((count / totalQuestions) * 100);
+  
+  const textEl = document.getElementById('progressText');
+  const barEl = document.getElementById('progressBar');
+  
+  if (textEl) textEl.innerText = `${count} / ${totalQuestions} Answered`;
+  if (barEl) {
+    barEl.style.width = `${pct}%`;
+    barEl.setAttribute('aria-valuenow', pct);
+  }
+}
+
+function openSubmitModal() {
+  const answered = getAnsweredCount();
+  const unanswered = totalQuestions - answered;
+  
+  const countEl = document.getElementById('modalAnsweredCount');
+  const warnEl = document.getElementById('unansweredWarning');
+  const warnCountEl = document.getElementById('unansweredCountDisplay');
+  
+  if (countEl) countEl.innerText = answered;
+  
+  if (unanswered > 0) {
+    if (warnEl) warnEl.classList.remove('d-none');
+    if (warnCountEl) warnCountEl.innerText = unanswered;
+  } else {
+    if (warnEl) warnEl.classList.add('d-none');
+  }
+
+  const modalEl = document.getElementById('submitConfirmModal');
+  if (modalEl) {
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
+}
+
+// On initial page load:
+document.addEventListener('DOMContentLoaded', () => {
+  // Check which questions already have answers (e.g. on resume/reload)
+  for (let i = 1; i <= totalQuestions; i++) {
+    const pane = document.getElementById(`q_pane_${i}`);
+    if (pane) {
+      const checked = pane.querySelector('input[type="radio"]:checked');
+      if (checked) {
+        const btn = document.getElementById(`palette_btn_${i}`);
+        if (btn) btn.classList.add('answered-q');
+      }
+    }
+  }
+  updateProgress();
+  showQuestion(1);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+
+# Secrets - NEVER commit these
+.env
+
+# Local database and uploads
+*.db
+*.sqlite3
+uploads/*
+!uploads/.gitkeep
+violation_snapshots/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

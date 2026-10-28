@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block title %}Select Assessment Language — AI Skill Verification Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-2">
+  <div class="col-lg-10">
+
+    <!-- Briefing Header Card -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div>
+            <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 mb-2 rounded-pill fw-semibold">
+              <i class="bi bi-shield-check me-1"></i> Technical Skill Assessment
+            </div>
+            <h2 class="fw-bold text-navy-900 mb-1">Select Programming Language</h2>
+            <p class="text-muted mb-0">Choose your preferred language to begin an objective 7-question MCQ evaluation.</p>
+          </div>
+          {% if resume %}
+            <div class="text-md-end">
+              <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                <i class="bi bi-file-earmark-check me-1"></i> Resume Connected: {{ resume.filename }}
+              </span>
+              <div class="text-muted small mt-1">{{ claimed_skills|length }} technical skills extracted</div>
+            </div>
+          {% endif %}
+        </div>
+
+        <hr class="my-4 text-slate-200">
+
+        <!-- Evaluation Framework Badges -->
+        <div class="row g-3 text-start">
+          <div class="col-md-3 col-sm-6">
+            <div class="p-3 bg-light rounded-3 border h-100">
+              <div class="fw-bold text-navy-900 small mb-1"><i class="bi bi-shuffle text-primary me-1"></i> 7 Distinct Questions</div>
+              <div class="text-muted small">Randomly sampled from the 20-question calibrated bank.</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <div class="p-3 bg-light rounded-3 border h-100">
+              <div class="fw-bold text-navy-900 small mb-1"><i class="bi bi-percent text-success me-1"></i> Proportional Scoring</div>
+              <div class="text-muted small">Score = (Correct / 7) &times; 100 on a 100-mark scale.</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <div class="p-3 bg-light rounded-3 border h-100">
+              <div class="fw-bold text-navy-900 small mb-1"><i class="bi bi-arrow-repeat text-info me-1"></i> Attempt Persistence</div>
+              <div class="text-muted small">Questions and answers persist across page refreshes.</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <div class="p-3 bg-light rounded-3 border h-100">
+              <div class="fw-bold text-navy-900 small mb-1"><i class="bi bi-award text-warning me-1"></i> Certificate at &ge; 60%</div>
+              <div class="text-muted small">Verifiable PDF certificate with public QR validation.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Language Selection Cards -->
+    <h4 class="fw-bold text-navy-900 mb-3"><i class="bi bi-cpu me-2 text-primary"></i>Available Languages</h4>
+    <div class="row g-4 mb-4">
+
+      <!-- 1. Python -->
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0 card-hover bg-white d-flex flex-column">
+          <div class="card-body p-4 d-flex flex-column flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-3 bg-primary-subtle text-primary fs-3">
+                  <i class="bi bi-filetype-py"></i>
+                </div>
+                <div>
+                  <h4 class="fw-bold text-navy-900 mb-0">Python</h4>
+                  <small class="text-muted">General Purpose & Data Engineering</small>
+                </div>
+              </div>
+              {% set python_claimed = false %}
+              {% for s in claimed_skills %}
+                {% if s|lower in ['python', 'python3', 'py'] %}{% set python_claimed = true %}{% endif %}
+              {% endfor %}
+              {% if python_claimed %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                  <i class="bi bi-check-lg"></i> Declared on Resume
+                </span>
+              {% endif %}
+            </div>
+
+            <p class="text-secondary small mb-3">
+              Evaluates core language fundamentals, data types, mutable default arguments, list comprehensions, slicing, exception handling, and standard library collections.
+            </p>
+
+            <div class="mb-3">
+              <span class="badge bg-light text-dark border me-1 mb-1">Data Types</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Slicing</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Functions</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Comprehensions</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Exceptions</span>
+            </div>
+
+            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+              <span class="text-muted small">20 Questions in Bank &bull; 7 Per Test</span>
+              {% if 'python' in active_by_lang %}
+                <a href="{{ url_for('main.start_assessment_route', language='python') }}" class="btn btn-warning fw-semibold px-3">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Resume Test
+                </a>
+              {% else %}
+                <a href="{{ url_for('main.start_assessment_route', language='python') }}" class="btn btn-primary fw-semibold px-4">
+                  <i class="bi bi-play-circle-fill me-1"></i> Start Python Test
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Java -->
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0 card-hover bg-white d-flex flex-column">
+          <div class="card-body p-4 d-flex flex-column flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-3 bg-danger-subtle text-danger fs-3">
+                  <i class="bi bi-filetype-java"></i>
+                </div>
+                <div>
+                  <h4 class="fw-bold text-navy-900 mb-0">Java</h4>
+                  <small class="text-muted">Enterprise & Object-Oriented Systems</small>
+                </div>
+              </div>
+              {% set java_claimed = false %}
+              {% for s in claimed_skills %}
+                {% if s|lower in ['java', 'core java', 'j2se'] %}{% set java_claimed = true %}{% endif %}
+              {% endfor %}
+              {% if java_claimed %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                  <i class="bi bi-check-lg"></i> Declared on Resume
+                </span>
+              {% endif %}
+            </div>
+
+            <p class="text-secondary small mb-3">
+              Evaluates JVM memory architecture, String pool immutability, inheritance, polymorphism, abstract classes vs interfaces, exception hierarchies, and Collections contracts.
+            </p>
+
+            <div class="mb-3">
+              <span class="badge bg-light text-dark border me-1 mb-1">String Pool</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">OOP & Overriding</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Interfaces</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Collections</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Stack vs Heap</span>
+            </div>
+
+            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+              <span class="text-muted small">20 Questions in Bank &bull; 7 Per Test</span>
+              {% if 'java' in active_by_lang %}
+                <a href="{{ url_for('main.start_assessment_route', language='java') }}" class="btn btn-warning fw-semibold px-3">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Resume Test
+                </a>
+              {% else %}
+                <a href="{{ url_for('main.start_assessment_route', language='java') }}" class="btn btn-primary fw-semibold px-4">
+                  <i class="bi bi-play-circle-fill me-1"></i> Start Java Test
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. C -->
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0 card-hover bg-white d-flex flex-column">
+          <div class="card-body p-4 d-flex flex-column flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-3 bg-secondary-subtle text-secondary fs-3">
+                  <i class="bi bi-c-circle"></i>
+                </div>
+                <div>
+                  <h4 class="fw-bold text-navy-900 mb-0">C Programming</h4>
+                  <small class="text-muted">Systems & Low-Level Architecture</small>
+                </div>
+              </div>
+              {% set c_claimed = false %}
+              {% for s in claimed_skills %}
+                {% if s|lower in ['c', 'c language'] %}{% set c_claimed = true %}{% endif %}
+              {% endfor %}
+              {% if c_claimed %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                  <i class="bi bi-check-lg"></i> Declared on Resume
+                </span>
+              {% endif %}
+            </div>
+
+            <p class="text-secondary small mb-3">
+              Evaluates pointer arithmetic, address referencing, dynamic memory allocation (`malloc`, `calloc`, `free`), arrays, structs vs unions, strings, and bitwise operations.
+            </p>
+
+            <div class="mb-3">
+              <span class="badge bg-light text-dark border me-1 mb-1">Pointers & Arithmetic</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Malloc/Free</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Null-Terminated Strings</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Structs & Unions</span>
+            </div>
+
+            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+              <span class="text-muted small">20 Questions in Bank &bull; 7 Per Test</span>
+              {% if 'c' in active_by_lang %}
+                <a href="{{ url_for('main.start_assessment_route', language='c') }}" class="btn btn-warning fw-semibold px-3">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Resume Test
+                </a>
+              {% else %}
+                <a href="{{ url_for('main.start_assessment_route', language='c') }}" class="btn btn-primary fw-semibold px-4">
+                  <i class="bi bi-play-circle-fill me-1"></i> Start C Test
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. C++ -->
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0 card-hover bg-white d-flex flex-column">
+          <div class="card-body p-4 d-flex flex-column flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-3 bg-info-subtle text-info fs-3">
+                  <i class="bi bi-code-square"></i>
+                </div>
+                <div>
+                  <h4 class="fw-bold text-navy-900 mb-0">C++</h4>
+                  <small class="text-muted">High-Performance & Modern Systems</small>
+                </div>
+              </div>
+              {% set cpp_claimed = false %}
+              {% for s in claimed_skills %}
+                {% if s|lower in ['c++', 'cpp', 'c plus plus'] %}{% set cpp_claimed = true %}{% endif %}
+              {% endfor %}
+              {% if cpp_claimed %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                  <i class="bi bi-check-lg"></i> Declared on Resume
+                </span>
+              {% endif %}
+            </div>
+
+            <p class="text-secondary small mb-3">
+              Evaluates references vs pointers, constructors/destructors, virtual functions and polymorphism, abstract classes, operator overloading, STL vectors/maps, and RAII smart pointers.
+            </p>
+
+            <div class="mb-3">
+              <span class="badge bg-light text-dark border me-1 mb-1">References</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Virtual Destructors</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">STL Vector & Map</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">Smart Pointers</span>
+              <span class="badge bg-light text-dark border me-1 mb-1">RAII</span>
+            </div>
+
+            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+              <span class="text-muted small">20 Questions in Bank &bull; 7 Per Test</span>
+              {% if 'cpp' in active_by_lang %}
+                <a href="{{ url_for('main.start_assessment_route', language='cpp') }}" class="btn btn-warning fw-semibold px-3">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Resume Test
+                </a>
+              {% else %}
+                <a href="{{ url_for('main.start_assessment_route', language='cpp') }}" class="btn btn-primary fw-semibold px-4">
+                  <i class="bi bi-play-circle-fill me-1"></i> Start C++ Test
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Return to Dashboard Link -->
+    <div class="text-center">
+      <a href="{{ url_for('main.dashboard') }}" class="text-decoration-none text-muted small">
+        <i class="bi bi-arrow-left me-1"></i> Return to Candidate Dashboard
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

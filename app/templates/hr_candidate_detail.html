@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block title %}Candidate Detail: {{ candidate.name }} — HR Portal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-2">
+  <div class="col-lg-10">
+    <!-- Top Nav Action -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <a href="{{ url_for('main.hr_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Candidate Directory
+      </a>
+      <div class="d-flex gap-2">
+        {% if latest_report %}
+          <a href="{{ url_for('main.download_report_pdf', report_id=latest_report.id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Download Assessment Report (PDF)
+          </a>
+        {% endif %}
+        {% if resume %}
+          <a href="{{ url_for('main.download_resume', resume_id=resume.id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-download me-1"></i> Download Resume File
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Candidate Header Card -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+      <div class="card-body p-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+          <div>
+            <span class="badge bg-light text-dark border mb-2">Candidate Ref: #USR-{{ candidate.id }}</span>
+            <h3 class="fw-bold text-navy-900 mb-1">{{ candidate.name }}</h3>
+            <div class="text-muted small">
+              <i class="bi bi-envelope me-1"></i> {{ candidate.email }} &bull; Registered {{ candidate.created_at.strftime('%B %d, %Y') if candidate.created_at else 'Recently' }}
+            </div>
+          </div>
+          <div class="text-md-end">
+            {% if latest_attempt and latest_attempt.status == 'completed' %}
+              <span class="text-muted small d-block mb-1">Latest Assessment ({{ latest_attempt.language_display }})</span>
+              <span class="fw-bold fs-3 text-primary">{{ latest_attempt.final_score|round(2) }} <small class="fs-6 text-muted">/ 100</small></span>
+              <div>
+                <span class="badge 
+                  {% if 'Advanced' in latest_attempt.performance_category or 'Strong' in latest_attempt.performance_category %}bg-success
+                  {% elif 'Intermediate' in latest_attempt.performance_category %}bg-primary
+                  {% elif 'Developing' in latest_attempt.performance_category %}bg-warning text-dark
+                  {% else %}bg-danger{% endif %}">
+                  {{ latest_attempt.performance_category }} ({{ latest_attempt.percentage|round(2) }}%)
+                </span>
+              </div>
+            {% else %}
+              <span class="badge bg-warning text-dark fs-6">No Assessment Completed Yet</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resume Claim vs. Actual Assessment Comparison -->
+    {% if latest_attempt and comparison %}
+      <div class="card shadow-sm border-0 mb-4 bg-white">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0 text-navy-900">
+            <i class="bi bi-bezier2 text-primary me-2"></i>Resume Claim vs. Assessment Demonstration
+          </h5>
+          <span class="badge bg-primary px-3 py-1">{{ comparison.status_label }}</span>
+        </div>
+        <div class="card-body p-4">
+          <div class="alert alert-light border mb-3">
+            <strong class="text-navy-900">Analysis Summary:</strong>
+            <p class="mb-0 text-dark small mt-1">{{ comparison.analysis }}</p>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 border">
+                <span class="text-muted small d-block">Language Claim on Resume:</span>
+                <strong class="text-navy-900">{{ comparison.language }}</strong> &bull; Status: 
+                <span class="badge {% if comparison.claimed_in_resume %}bg-success{% else %}bg-secondary{% endif %}">
+                  {% if comparison.claimed_in_resume %}Explicitly Claimed{% else %}Not Declared{% endif %}
+                </span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 border">
+                <span class="text-muted small d-block">Empirical Assessment Result:</span>
+                <strong class="text-primary">{{ comparison.assessment_score|round(2) }} / 100</strong> &bull; Level: 
+                <span class="badge bg-primary">{{ latest_attempt.performance_category }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-muted small">
+            <em>{{ comparison.disclaimer }}</em>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Resume Data & Categorized Claimed Skills -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-navy-900"><i class="bi bi-file-earmark-text text-primary me-2"></i>Extracted Resume Information</h5>
+        {% if resume %}
+          <a href="{{ url_for('main.download_resume', resume_id=resume.id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-download me-1"></i> Download File
+          </a>
+        {% endif %}
+      </div>
+      <div class="card-body p-4">
+        {% if resume %}
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <div>
+              <span class="text-muted small">Document:</span> <strong>{{ resume.filename }}</strong>
+              <small class="text-muted ms-2">Uploaded on {{ resume.uploaded_at.strftime('%Y-%m-%d') if resume.uploaded_at else '' }}</small>
+            </div>
+            <span class="badge bg-success-subtle text-success border border-success-subtle">
+              {{ parsed_resume.get('engine', 'NLP Engine') }}
+            </span>
+          </div>
+
+          <!-- All Claimed Skills -->
+          <div class="mb-3">
+            <h6 class="fw-bold text-navy-900 small text-uppercase mb-2">Claimed Technical Skills ({{ claimed_skills|length }})</h6>
+            <div class="d-flex flex-wrap gap-2">
+              {% for s in claimed_skills %}
+                <span class="skill-pill skill-pill-claimed px-2 py-1" style="font-size: 0.8rem;">{{ s }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Categorized Skills Grid -->
+          {% if parsed_resume.categorized_skills %}
+            <div class="row g-2 mb-3">
+              {% for cat, skills in parsed_resume.categorized_skills.items() %}
+                <div class="col-md-6 col-lg-4">
+                  <div class="p-2 bg-light rounded border small">
+                    <strong class="text-dark">{{ cat }}:</strong>
+                    <span class="text-muted">{{ skills|join(', ') }}</span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <!-- Identified Sections -->
+          {% if parsed_resume.sections %}
+            <div class="mt-3 pt-3 border-top">
+              <h6 class="fw-bold text-navy-900 small text-uppercase mb-2">Resume Content Highlights</h6>
+              <div class="row g-3">
+                {% if parsed_resume.sections.education %}
+                  <div class="col-md-6">
+                    <div class="p-3 bg-light rounded border small">
+                      <strong class="text-navy-900 d-block mb-1"><i class="bi bi-mortarboard me-1"></i> Education</strong>
+                      <ul class="mb-0 ps-3 text-secondary">
+                        {% for item in parsed_resume.sections.education %}
+                          <li>{{ item }}</li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </div>
+                {% endif %}
+                {% if parsed_resume.sections.projects %}
+                  <div class="col-md-6">
+                    <div class="p-3 bg-light rounded border small">
+                      <strong class="text-navy-900 d-block mb-1"><i class="bi bi-kanban me-1"></i> Projects</strong>
+                      <ul class="mb-0 ps-3 text-secondary">
+                        {% for item in parsed_resume.sections.projects %}
+                          <li>{{ item }}</li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+
+        {% else %}
+          <p class="text-muted mb-0">Candidate has not uploaded a resume yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Complete Assessment History for this Candidate -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-navy-900">
+          <i class="bi bi-clock-history text-primary me-2"></i>Assessment Records for {{ candidate.name }}
+        </h5>
+        <span class="badge bg-light text-dark border">{{ attempts|length }} Attempts</span>
+      </div>
+      <div class="card-body p-0">
+        {% if attempts %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-muted text-uppercase">
+                <tr>
+                  <th class="ps-4">Attempt ID</th>
+                  <th>Language</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Score / 100</th>
+                  <th>Percentage</th>
+                  <th>Category</th>
+                  <th class="text-end pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for att in attempts %}
+                  <tr>
+                    <td class="ps-4 fw-bold">#ATT-{{ att.id }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ att.language_display }}</span></td>
+                    <td class="small text-muted">{{ att.started_at.strftime('%Y-%m-%d %H:%M') if att.started_at else 'N/A' }}</td>
+                    <td>
+                      {% if att.status == 'completed' %}
+                        <span class="badge bg-success">Completed</span>
+                      {% else %}
+                        <span class="badge bg-warning text-dark">In Progress</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if att.status == 'completed' %}
+                        <strong class="text-primary">{{ att.final_score|round(2) }}</strong>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if att.status == 'completed' %}
+                        <strong class="text-success">{{ att.percentage|round(2) }}%</strong>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if att.performance_category %}
+                        <span class="badge bg-light text-dark border">{{ att.performance_category }}</span>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                      {% if att.status == 'completed' %}
+                        <a href="{{ url_for('main.assessment_result', attempt_id=att.id) }}" class="btn btn-outline-primary btn-sm me-1" title="View Full Answers">
+                          <i class="bi bi-eye"></i> Answers
+                        </a>
+                        {% if att.report %}
+                          <a href="{{ url_for('main.download_report_pdf', report_id=att.report.id) }}" class="btn btn-outline-secondary btn-sm" title="Download Report PDF">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                          </a>
+                        {% endif %}
+                      {% else %}
+                        <span class="text-muted small">In Progress</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-4 text-muted">
+            <p class="mb-0">No assessment attempts recorded for this candidate.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Verifiable Certificate Card (If Issued) -->
+    {% if certificate %}
+      <div class="card mb-4 border-0 shadow-sm bg-white" style="border-left: 6px solid var(--emerald-500) !important;">
+        <div class="card-body p-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <span class="badge bg-success-subtle text-success border border-success-subtle mb-1">Authentic Verifiable Credential</span>
+              <h5 class="fw-bold mb-1 text-navy-900">Certificate Reference: {{ certificate.certificate_id }}</h5>
+              <p class="text-muted small mb-0">
+                Verified Skill: <strong>{{ certificate.skill }}</strong> &bull; Score: <strong>{{ certificate.score|round(2) }}%</strong> &bull; Issued on {{ certificate.issued_at.strftime('%B %d, %Y') }}
+              </p>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('main.verify_certificate', certificate_id=certificate.certificate_id) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-qr-code me-1"></i> Public Verification
+              </a>
+              <a href="{{ url_for('main.download_certificate', certificate_id=certificate.certificate_id) }}" class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download Certificate
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
